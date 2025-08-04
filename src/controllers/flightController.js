@@ -1,23 +1,29 @@
 import { searchFlightsService, getFlightAvailabilityService } from '../services/flightService.js';
-//import { validateSearchParams } from '../middleware/validation.js';
 
-// GET /api/v1/flights/search
+// POST /api/v1/flights/search (with request body)
 export const searchFlights = async (req, res) => {
   try {
-    // Validate request parameters
-    // const validationResult = validateSearchParams(req.query);
-    // if (!validationResult.isValid) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     error: {
-    //       code: "VALIDATION_ERROR",
-    //       message: validationResult.message
-    //     }
-    //   });
-    // }
-
+    // Get search parameters from request body
+    const searchParams = req.body;
+    
+    console.log('📥 Request body received:', searchParams);
+    console.log('📥 Request body type:', typeof searchParams);
+    console.log('📥 Request body keys:', Object.keys(searchParams || {}));
+    
+    // Check if request body is provided
+    if (!searchParams || Object.keys(searchParams).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "MISSING_BODY",
+          message: "Request body is required for flight search"
+        }
+      });
+    }
+    
+    console.log('🚀 Calling service with params:', searchParams);
     // Call service function
-    const result = await searchFlightsService(req.query);
+    const result = await searchFlightsService(searchParams);
     
     res.json({
       success: true,

@@ -1,23 +1,68 @@
 import { createBookingService, getBookingByIdService } from '../services/bookingService.js';
-import { validateBookingRequest } from '../middleware/validation.js';
 
 // POST /api/v1/flights/book
 export const createBooking = async (req, res) => {
   try {
-    // Validate booking request
-    const validationResult = validateBookingRequest(req.body);
-    if (!validationResult.isValid) {
+    console.log('📥 Request body received:', req.body);
+    console.log('📥 Request body type:', typeof req.body);
+    console.log('📥 Request body keys:', Object.keys(req.body));
+    
+    const {
+      flightId,
+      passengers,
+      contactInfo,
+      travelClass,
+      departureDate,
+      returnFlightId,
+      returnDate
+    } = req.body;
+
+    // Validate required fields
+    if (!flightId || !passengers || !contactInfo || !travelClass || !departureDate) {
+      console.log('❌ Missing required fields');
       return res.status(400).json({
         success: false,
         error: {
-          code: "VALIDATION_ERROR",
-          message: validationResult.message
+          code: "MISSING_REQUIRED_FIELDS",
+          message: "Missing required fields: flightId, passengers, contactInfo, travelClass, departureDate"
         }
       });
     }
 
+    // Structure the data as expected by the service
+    const bookingData = {
+      flightSelection: {
+        outbound: {
+          flightId: flightId,
+          class: travelClass,
+          departureDate: departureDate
+        }
+      },
+      passengers: {
+        adults: passengers.filter(p => p.type === 'ADULT').length,
+        children: passengers.filter(p => p.type === 'CHILD').length,
+        infants: passengers.filter(p => p.type === 'INFANT').length
+      },
+      passengerDetails: passengers,
+      contactInfo: contactInfo,
+      paymentMethod: 'CREDIT_CARD', // Default payment method
+      businessJustification: null
+    };
+
+    console.log('📤 Structured booking data:', JSON.stringify(bookingData, null, 2));
+
+    // Add return flight if provided
+    if (returnFlightId && returnDate) {
+      bookingData.flightSelection.return = {
+        flightId: returnFlightId,
+        class: travelClass,
+        departureDate: returnDate
+      };
+    }
+
     // Create booking
-    const booking = await createBookingService(req.body);
+    console.log('🚀 Calling service with params:', bookingData);
+    const booking = await createBookingService(bookingData);
     
     res.status(201).json({
       success: true,
@@ -32,7 +77,8 @@ export const createBooking = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Booking creation error:', error);
+    console.error('❌ Booking creation error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       error: {
@@ -43,7 +89,7 @@ export const createBooking = async (req, res) => {
   }
 };
 
-// GET /api/v1/flights/bookings/:id
+
 export const getBookingById = async (req, res) => {
   try {
     const { id } = req.params;

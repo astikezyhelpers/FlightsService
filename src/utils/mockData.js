@@ -22,8 +22,8 @@ export const getMockFlights = () => {
           }
         },
         schedule: {
-          departureTime: "2025-08-15T06:30:00Z",
-          arrivalTime: "2025-08-15T09:15:00Z",
+          departureTime: "2025-01-15T06:30:00Z",
+          arrivalTime: "2025-01-15T09:15:00Z",
           duration: 165
         },
         pricing: {
@@ -66,8 +66,8 @@ export const getMockFlights = () => {
           }
         },
         schedule: {
-          departureTime: "2025-08-15T08:00:00Z",
-          arrivalTime: "2025-08-15T10:45:00Z",
+          departureTime: "2025-01-15T08:00:00Z",
+          arrivalTime: "2025-01-15T10:45:00Z",
           duration: 165
         },
         pricing: {
@@ -87,6 +87,50 @@ export const getMockFlights = () => {
         stops: 0,
         aircraft: "B787",
         amenities: ["WIFI", "MEAL", "ENTERTAINMENT"]
+      },
+      {
+        flightId: "flight_791",
+        flightNumber: "SG123",
+        airline: { 
+          code: "SG", 
+          name: "SpiceJet" 
+        },
+        route: {
+          origin: { 
+            code: "BLR", 
+            name: "Bengaluru",
+            city: "Bengaluru",
+            country: "India"
+          },
+          destination: { 
+            code: "DEL", 
+            name: "Delhi",
+            city: "Delhi", 
+            country: "India"
+          }
+        },
+        schedule: {
+          departureTime: "2025-01-15T10:30:00Z",
+          arrivalTime: "2025-01-15T13:15:00Z",
+          duration: 165
+        },
+        pricing: {
+          economy: {
+            basePrice: 3800,
+            taxes: 750,
+            totalPrice: 4550,
+            availability: 15
+          },
+          business: {
+            basePrice: 11000,
+            taxes: 1800,
+            totalPrice: 12800,
+            availability: 4
+          }
+        },
+        stops: 1,
+        aircraft: "B737",
+        amenities: ["WIFI"]
       }
     ];
   };

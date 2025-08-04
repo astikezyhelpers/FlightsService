@@ -3,8 +3,8 @@ import { searchFlights, getFlightAvailability } from '../controllers/flightContr
 
 const router = express.Router();
 
-// GET /api/v1/flights/search
-router.get('/search', searchFlights);
+// POST /api/v1/flights/search (with request body)
+router.post('/search', searchFlights);
 
 // GET /api/v1/flights/:flightId/availability
 router.get('/:flightId/availability', getFlightAvailability);

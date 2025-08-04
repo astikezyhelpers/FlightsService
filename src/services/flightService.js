@@ -2,7 +2,14 @@ import {Flight,Booking,SearchHistory} from "../models/modelsIndex.js";
 import { getMockFlights } from '../utils/mockData.js';
 
 // Search flights service function
-export const searchFlightsService = async (searchParams) => {
+export const searchFlightsService = async (searchParams = {}) => {
+  console.log('🔧 Service received searchParams:', searchParams);
+  console.log('🔧 Service received searchParams type:', typeof searchParams);
+  
+  // Ensure searchParams is an object
+  const params = searchParams || {};
+  console.log('🔧 Service using params:', params);
+  
   const {
     origin,
     destination,
@@ -19,7 +26,7 @@ export const searchFlightsService = async (searchParams) => {
     sortOrder = 'asc',
     page = 1,
     limit = 20
-  } = searchParams;
+  } = params;
 
   try {
     // For now, use mock data (later replace with database query)
@@ -34,11 +41,16 @@ export const searchFlightsService = async (searchParams) => {
       preferredAirlines
     });
 
+    console.log('📊 Flights after filtering:', flights.length);
+
     // Apply sorting
     flights = sortFlights(flights, sortBy, sortOrder, travelClass);
+    console.log('📊 Flights after sorting:', flights.length);
 
     // Apply pagination
     const paginatedFlights = paginateFlights(flights, page, limit);
+    console.log('📊 Flights after pagination:', paginatedFlights.length);
+    console.log('📊 Pagination details - page:', page, 'limit:', limit);
 
     return {
       searchId: `search_${Date.now()}`,
@@ -100,24 +112,47 @@ export const getFlightAvailabilityService = async (flightId, date, travelClass) 
 };
 
 // Helper functions
-const filterFlights = (flights, filters) => {
+const filterFlights = (flights, filters = {}) => {
+  console.log('🔍 Filtering flights with filters:', filters);
+  console.log('📊 Total flights before filtering:', flights.length);
+  
   return flights.filter(flight => {
-    // Route matching
-    const routeMatch = flight.route.origin.code === filters.origin.toUpperCase() &&
-                      flight.route.destination.code === filters.destination.toUpperCase();
+    console.log(`\n✈️ Checking flight: ${flight.flightNumber} (${flight.airline.code})`);
     
-    if (!routeMatch) return false;
+    // Route matching - check if origin and destination are provided
+    if (filters.origin && filters.destination) {
+      const routeMatch = flight.route.origin.code === filters.origin.toUpperCase() &&
+                        flight.route.destination.code === filters.destination.toUpperCase();
+      
+      console.log(`📍 Route check: ${flight.route.origin.code} -> ${flight.route.destination.code}`);
+      console.log(`📍 Expected: ${filters.origin.toUpperCase()} -> ${filters.destination.toUpperCase()}`);
+      console.log(`📍 Route match: ${routeMatch}`);
+      
+      if (!routeMatch) {
+        console.log('❌ Flight filtered out - route mismatch');
+        return false;
+      }
+    }
 
     // Date matching
     if (filters.departureDate) {
       const departureDateObj = new Date(filters.departureDate);
       const flightDate = new Date(flight.schedule.departureTime);
       const dateMatch = flightDate.toDateString() === departureDateObj.toDateString();
-      if (!dateMatch) return false;
+      
+      console.log(`📅 Date check: Flight date: ${flightDate.toDateString()}`);
+      console.log(`📅 Expected date: ${departureDateObj.toDateString()}`);
+      console.log(`📅 Date match: ${dateMatch}`);
+      
+      if (!dateMatch) {
+        console.log('❌ Flight filtered out - date mismatch');
+        return false;
+      }
     }
 
     // Direct flights filter
     if (filters.directFlights === 'true' && flight.stops !== 0) {
+      console.log('❌ Flight filtered out - not direct flight');
       return false;
     }
 
@@ -125,10 +160,12 @@ const filterFlights = (flights, filters) => {
     if (filters.preferredAirlines) {
       const airlines = filters.preferredAirlines.split(',');
       if (!airlines.includes(flight.airline.code)) {
+        console.log('❌ Flight filtered out - airline not preferred');
         return false;
       }
     }
 
+    console.log('✅ Flight passed all filters');
     return true;
   });
 };

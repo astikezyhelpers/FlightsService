@@ -49,8 +49,7 @@ const passengerSchema = new mongoose.Schema({
 
 const flightSegmentSchema = new mongoose.Schema({
   flightId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Flight',
+    type: String,
     required: true
   },
   flightNumber: {
