@@ -1,12 +1,15 @@
 import express from 'express';
-import { searchFlights, getFlightAvailability } from '../controllers/flightController.js';
+import {
+    flightsOfferController,
+    flightPriceOfferController,
+} from '../controllers/flightController.js'
+import authenticateToken from '../middleware/authentication.js';
 
 const router = express.Router();
 
-// GET /api/v1/flights/search
-router.get('/search', searchFlights);
 
-// GET /api/v1/flights/:flightId/availability
-router.get('/:flightId/availability', getFlightAvailability);
+router.post('/search',flightsOfferController);
+router.post('/flight-price',flightPriceOfferController);
+
 
 export default router;

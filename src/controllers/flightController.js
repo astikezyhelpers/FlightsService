@@ -1,62 +1,77 @@
-import { searchFlightsService, getFlightAvailabilityService } from '../services/flightService.js';
-//import { validateSearchParams } from '../middleware/validation.js';
-
-// GET /api/v1/flights/search
-export const searchFlights = async (req, res) => {
-  try {
-    // Validate request parameters
-    // const validationResult = validateSearchParams(req.query);
-    // if (!validationResult.isValid) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     error: {
-    //       code: "VALIDATION_ERROR",
-    //       message: validationResult.message
-    //     }
-    //   });
-    // }
-
-    // Call service function
-    const result = await searchFlightsService(req.query);
+import {
+  FlightOfferService,
+  FlightPriceOfferService,
+} from '../services/flightService.js'
+import AppError from '../utils/appError.js';
+import { flightSearchSchema } from "../validation/searchParamValidation.js"; 
+import {transeformedFlight} from '../utils/helpers.js';
+export const flightsOfferController = async (req,res,next)=>{
+  try{
+    const body = req.body
+    if(!body){
+      throw new AppError('No data provided',400)
     
-    res.json({
-      success: true,
-      data: result
-    });
+    }
+    const { error } = flightSearchSchema.validate(body);
+    if (error) {
+      throw new AppError(`Validation error: ${error.details.map(x => x.message).join(', ')}`, 400);
+    }
 
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: "SEARCH_ERROR",
-        message: "Unable to process search request"
-      }
-    });
+    const seachQuery = {}
+    for(const key in body){
+      seachQuery[key] = body[key]
+
+    }
+ 
+    const flightOffers = await FlightOfferService(seachQuery)
+    if(!flightOffers || flightOffers.success === false){
+      throw new AppError('Failed to fetch flight offers please try again after some time or contact support team',500)
+    }
+    console.log('Flight Offers:',flightOffers)
+   
+    const transformnedFlightOffers = transeformedFlight(flightOffers)
+   
+    return res.status(200).json({
+      sucess: true,
+      data: transformnedFlightOffers,
+      flightOffers
+    })
+
+
+  }catch(err){
+    next(err)
   }
-};
+   
 
-// GET /api/v1/flights/:flightId/availability
-export const getFlightAvailability = async (req, res) => {
-  try {
-    const { flightId } = req.params;
-    const { date, class: travelClass = 'ECONOMY' } = req.query;
+} 
 
-    const result = await getFlightAvailabilityService(flightId, date, travelClass);
+export const flightPriceOfferController = async (req,res,next)=>{
+  try{
+    const body = req.body
+
+    if(!body){
+      throw new AppError('No data provided',400)
+   
+    }
+    const confirmationOffer = await FlightPriceOfferService(body)
+    if(!confirmationOffer){
+      throw new AppError('Failed to fetch flight offer prices please try again after some time or contact support team',500)
+    }
+    if (confirmationOffer.success === false){
+      throw new AppError(confirmationOffer.error || 'Failed to fetch flight offer prices please try again after some time or contact support team',500)
+     
+    }else if(confirmationOffer.data.warnings && confirmationOffer.data.warnings.length > 0){
+      throw new AppError(confirmationOffer.data.warnings[0].detail || 'Failed to fetch flight offer prices please try again after some time or contact support team',400) 
+    }
     
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    console.error('Availability error:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: "AVAILABILITY_ERROR",
-        message: "Unable to check availability"
-      }
-    });
+    return res.status(200).json({
+      sucess: true,
+      data: confirmationOffer
+    })
+    
+  }catch(err){
+    next(err)
+  
   }
-};
+}
+

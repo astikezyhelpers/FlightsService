@@ -14,31 +14,51 @@ const passengerSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    minlength: 1,
+    maxlength: 50
   },
   lastName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    minlength: 1,
+    maxlength: 50
   },
   dateOfBirth: {
     type: Date,
-    required: true
+    required: true,
+    validate: {
+      validator: function(value) {
+        return value <= new Date();
+      },
+      message: 'Date of birth cannot be in the future'
+    }
   },
   passport: {
     number: {
       type: String,
       required: true,
-      uppercase: true
+      uppercase: true,
+      minlength: 5,
+      maxlength: 20
     },
     expiryDate: {
       type: Date,
-      required: true
+      required: true,
+      validate: {
+        validator: function(value) {
+          return value > new Date();
+        },
+        message: 'Passport must be valid (not expired)'
+      }
     },
     country: {
       type: String,
       required: true,
-      uppercase: true
+      uppercase: true,
+      minlength: 2,
+      maxlength: 3
     }
   },
   specialRequests: [{
@@ -49,8 +69,7 @@ const passengerSchema = new mongoose.Schema({
 
 const flightSegmentSchema = new mongoose.Schema({
   flightId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Flight',
+    type: String,
     required: true
   },
   flightNumber: {
@@ -59,15 +78,33 @@ const flightSegmentSchema = new mongoose.Schema({
   },
   route: {
     origin: {
-      code: String,
-      name: String,
+      code: {
+        type: String,
+        required: true,
+        uppercase: true,
+        minlength: 3,
+        maxlength: 3
+      },
+      name: {
+        type: String,
+        required: true
+      },
       city: String,
       country: String,
       terminal: String
     },
     destination: {
-      code: String,
-      name: String,
+      code: {
+        type: String,
+        required: true,
+        uppercase: true,
+        minlength: 3,
+        maxlength: 3
+      },
+      name: {
+        type: String,
+        required: true
+      },
       city: String,
       country: String,
       terminal: String
@@ -82,7 +119,10 @@ const flightSegmentSchema = new mongoose.Schema({
       type: Date,
       required: true
     },
-    duration: Number
+    duration: {
+      type: Number,
+      min: 0
+    }
   },
   seatClass: {
     type: String,
@@ -123,13 +163,7 @@ const bookingSchema = new mongoose.Schema({
   },
   passengers: [{
     type: passengerSchema,
-    required: true,
-    validate: {
-      validator: function(passengers) {
-        return passengers.length > 0;
-      },
-      message: 'At least one passenger is required'
-    }
+    required: true
   }],
   pricing: {
     basePrice: {
@@ -147,6 +181,11 @@ const bookingSchema = new mongoose.Schema({
       required: true,
       min: 0
     },
+    markup: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     totalPrice: {
       type: Number,
       required: true,
@@ -158,15 +197,27 @@ const bookingSchema = new mongoose.Schema({
       uppercase: true
     }
   },
+  contactInfo: {
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    },
+    phone: {
+      type: String,
+      required: true
+    }
+  },
   payment: {
     method: {
       type: String,
-      enum: ['WALLET', 'CREDIT_CARD'],
+      enum: ['WALLET', 'CREDIT_CARD', 'DEBIT_CARD', 'NET_BANKING'],
       required: true
     },
     status: {
       type: String,
-      enum: ['PENDING', 'PAID', 'FAILED'],
+      enum: ['PENDING', 'CONFIRMED', 'FAILED', 'CANCELLED'],
       default: 'PENDING'
     },
     transactionId: {
@@ -206,6 +257,16 @@ const bookingSchema = new mongoose.Schema({
     },
     costCenter: {
       type: String
+    },
+    amadeusOrderId: {
+      type: String
+    },
+    amadeusPnr: {
+      type: String
+    },
+    dataSource: {
+      type: String,
+      enum: ['AMADEUS_REAL_TIME', 'TEST_FALLBACK']
     }
   }
 }, {
@@ -213,9 +274,30 @@ const bookingSchema = new mongoose.Schema({
   collection: 'bookings'
 });
 
+// Custom validation for passengers array
+bookingSchema.path('passengers').validate(function(passengers) {
+  if (!passengers || passengers.length === 0) {
+    return false;
+  }
+  
+  // Check if at least one adult passenger
+  const hasAdult = passengers.some(p => p.type === 'ADULT');
+  if (!hasAdult) {
+    return false;
+  }
+  
+  // Check total passenger count
+  if (passengers.length > 9) {
+    return false;
+  }
+  
+  return true;
+}, 'At least one adult passenger is required and maximum 9 passengers allowed');
+
 // Indexes for booking queries
 bookingSchema.index({ userId: 1, createdAt: -1 });
 bookingSchema.index({ companyId: 1, createdAt: -1 });
-// bookingSchema.index({ confirmationCode: 1 });
+bookingSchema.index({ confirmationCode: 1 });
+bookingSchema.index({ status: 1, createdAt: -1 });
 
 export default mongoose.model('Booking', bookingSchema);
