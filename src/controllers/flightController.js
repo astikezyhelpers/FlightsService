@@ -5,6 +5,8 @@ import {
 import AppError from '../utils/appError.js';
 import { flightSearchSchema } from "../validation/searchParamValidation.js"; 
 import {transeformedFlight} from '../utils/helpers.js';
+import logger from '../../logger.js';
+
 export const flightsOfferController = async (req,res,next)=>{
   try{
     const body = req.body
@@ -27,7 +29,7 @@ export const flightsOfferController = async (req,res,next)=>{
     if(!flightOffers || flightOffers.success === false){
       throw new AppError('Failed to fetch flight offers please try again after some time or contact support team',500)
     }
-    console.log('Flight Offers:',flightOffers)
+    logger.info('Flight Offers:',flightOffers)
    
     const transformnedFlightOffers = transeformedFlight(flightOffers)
    

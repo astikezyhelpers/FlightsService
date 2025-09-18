@@ -1,5 +1,6 @@
 import {createBookingService} from '../services/bookingService.js';
 import AppError from '../utils/appError.js';
+import logger from '../../logger.js';
 
 export const createBookingControllerFromAmadeus = async(req, res,next) => {
   try {

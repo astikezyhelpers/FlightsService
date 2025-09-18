@@ -12,11 +12,11 @@ let tokenExpiry = null;
 // Get OAuth2 access token
 export const authenticateAmadeus = async () => {
   try {
-    console.log(' Authenticating with Amadeus API...');
+    logger.info(' Authenticating with Amadeus API...');
 
 
 
-    console.log(process.env.AMADEUS_CLIENT_ID,process.env.AMADEUS_CLIENT_SECRET);
+    logger.info(process.env.AMADEUS_CLIENT_ID,process.env.AMADEUS_CLIENT_SECRET);
     const response = await axios.post(`${AMADEUS_BASE_URL}/v1/security/oauth2/token`, {
       grant_type: 'client_credentials',
       client_id: process.env.AMADEUS_CLIENT_ID,
@@ -29,9 +29,9 @@ export const authenticateAmadeus = async () => {
 
     accessToken = response.data.access_token;
     tokenExpiry = Date.now() + (response.data.expires_in * 1000);
-    console.log(' Token acquired, expires at:', new Date(tokenExpiry).toISOString(),accessToken);
+    logger.info(' Token acquired, expires at:', new Date(tokenExpiry).toISOString(),accessToken);
     
-    console.log(' Amadeus authentication successful',accessToken);
+    logger.info(' Amadeus authentication successful',accessToken);
     return accessToken;
 
   } catch (error) {
@@ -53,7 +53,7 @@ export const searchAmadeusFlights = async (searchParams) => {
   try {
     await ensureValidToken();
 
-    //console.log(' Searching flights with Amadeus API:', searchParams);
+    //logger.info(' Searching flights with Amadeus API:', searchParams);
 
     const params = {
       originLocationCode: searchParams.origin || 'BLR',
@@ -80,7 +80,7 @@ export const searchAmadeusFlights = async (searchParams) => {
       },
       timeout: 30000
     });
-    console.log(' Flight search response:', typeof(response.data.data),response.data.data);
+    logger.info(' Flight search response:', typeof(response.data.data),response.data.data);
 
 
 
@@ -129,7 +129,7 @@ export const getFlightOfferPrices = async (flightDetails) => {
     };
 
   } catch (error) {
-    console.log(' Error fetching flight offer prices:',error.response?.message|| error.message);
+    logger.info(' Error fetching flight offer prices:',error.response?.message|| error.message);
     return {
       success: false,
       error: error.message
@@ -150,8 +150,8 @@ export const createFlightOrder = async (flightDetails,passenger) => {
     passenger.forEach((p) => {
       formattedPassengers.push(passengerDetails(p));
     });
-    console.log(typeof(formattedPassengers),JSON.stringify(formattedPassengers,null,2))
-    console.log('Creating flight order with details:', JSON.stringify(flightDetails, null, 2));
+    logger.info(typeof(formattedPassengers),JSON.stringify(formattedPassengers,null,2))
+    logger.info('Creating flight order with details:', JSON.stringify(flightDetails, null, 2));
 
     
 
@@ -179,7 +179,7 @@ export const createFlightOrder = async (flightDetails,passenger) => {
     };
 
   } catch (error) {
-    console.log(' Error creating flight order:', error.response.data);
+    logger.info(' Error creating flight order:', error.response.data);
     return {
       success: false,
       error: error.response.data

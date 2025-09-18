@@ -25,7 +25,7 @@ export const FlightPriceOfferService = async (flightDetails)=>{
       return 'Invalid Data Entered'
     }
     const flightPrice = await getFlightOfferPrices(flightDetails)
-    console.log('Flight Price:',flightPrice)
+    logger.info('Flight Price:',flightPrice)
     if(!flightPrice){
       return 'Failed To Fetch flight prices for selected Flight Offer'
     }

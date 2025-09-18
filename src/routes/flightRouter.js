@@ -8,8 +8,8 @@ import authenticateToken from '../middleware/authentication.js';
 const router = express.Router();
 
 
-router.post('/search',flightsOfferController);
-router.post('/flight-price',flightPriceOfferController);
+router.post('/search',authenticateToken,flightsOfferController);
+router.post('/flight-price',authenticateToken, flightPriceOfferController);
 
 
 export default router;
