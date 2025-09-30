@@ -5,7 +5,7 @@ import authenticateToken from '../middleware/authentication.js';
 const router = express.Router();
 
 
-router.post('/create-order',authenticateToken, createBookingControllerFromAmadeus);
+router.post('/create-order',createBookingControllerFromAmadeus);
 
 
 

@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import logger from '../../logger.js'
 dotenv.config({path:'../../.env'})
 import axios from 'axios';
 import {passengerDetails} from '../utils/helpers.js';
